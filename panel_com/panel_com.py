@@ -15,7 +15,6 @@ Revision History:
 """
 
 import serial
-import types
 from typing import List
 
 class PanelCom:
@@ -122,10 +121,15 @@ class PanelCom:
     def set_gain_bias(self, x_gain: int, x_bias: int, y_gain: int, y_bias: int):
         self._send_serial(chr(0x05) + chr(0x71) + PanelCom._signed_bytes_to_chars([x_gain, x_bias, y_gain, y_bias]))
 
+    # longer functions
+    def send_function(self, is_x: bool, segment_num: int, function: List[int]):
+        self._send_serial(chr(52) + chr(1 if is_x else 2) + chr(segment_num) +  PanelCom._signed_bytes_to_chars(function))
+
     # private methods
     def _send_serial(self, to_write: str):
         self.ser.write(list(map(ord, list(to_write))))
     
+    # static methods
     @staticmethod
     def _dec_to_char(num: int, num_chars: int) -> str:
         if num > 2 ** (8 * num_chars):
@@ -138,3 +142,4 @@ class PanelCom:
     @staticmethod
     def _signed_bytes_to_chars(bytes: List[int]) -> str:
         return ''.join([chr((b % 256 + 256) % 256) for b in bytes])
+    
