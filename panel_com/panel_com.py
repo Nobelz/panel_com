@@ -1,15 +1,17 @@
 """
 panel_com.py
 
-Purpose: provides a serial interface class to Michael Reiser's panel
-controller.
+Python class rewrite of the serial interface with Micahel Reiser's panel controller.
 
- Revision Histroy:
-   * original in Matlab by MBR (2004?)
-   * translated into Python by SAB (2006?)
-   * made into a class by JAB 4/8/07
-   * made into a stand alone python package by Will Dickson
- 
+Author: Various authors (see below)
+Version: 1.0
+
+Revision History:
+    2004?: Original Matlab code by Michael Reiser
+    2006?: Translated to Python by SAB
+    4/8/2007: Made into a class by JAB
+    2008?: Made into a stand alone python package by Will Dickson
+    v1.0 (7/17/2023): Revised and added additional functionality by Nobel Zhou (nxz157@case.edu)
 """
 
 # Constants
@@ -22,25 +24,10 @@ import serial
 import types
 
 class PanelCom:
-    def __init__( self, userport='/dev/ttyS0' ):
-        self.ser = serial.Serial(
-            port=userport,               #number of device, numbering starts at
-                                         #zero. if everything fails, the user
-                                         #can specify a device string, note
-                                         #that this isn't portable anymore
-                                         #if no port is specified an unconfigured
-                                         #an closed serial port object is created
-            baudrate=921600,             #baudrate
-            bytesize=serial.EIGHTBITS,   #number of databits
-            parity=serial.PARITY_NONE,   #enable parity checking
-            stopbits=serial.STOPBITS_ONE,#number of stopbits
-            timeout=None,                #set a timeout value, None for waiting forever
-            xonxoff=0,                   #enable software flow control
-            rtscts=0,                    #enable RTS/CTS flow control
-        )
-
-    #################################################################################
-    def SetPatternID(self,patternid):
+    def __init__(self, port, baudrate):
+        self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=None)
+        
+    def SetPatternID(self, patternid):
         if type(patternid) != types.IntType: raise TypeError
         if patternid < 0: raise ValueError
         self.send(chr(0x02) + chr(0x03) + chr(patternid))
@@ -84,6 +71,16 @@ class PanelCom:
             raise ValueError
         self.send(chr(0x05) + chr(0x70) + chr(xpos) + chr(0x00) + chr(ypos) + chr(0x00))
 
+    def SetAO(self, chan, val):
+        if type(chan) != types.IntType or type(val) != types.IntType:
+            raise TypeError
+        if chan < 1 or chan > 4 or abs(val) > 255:
+            raise ValueError
+        if val > 0:
+            self.send(chr(0x04) + chr(0x10) + chr(chan) + chr(0x00) + chr(val))
+        else:
+            self.send(chr(0x04) + chr(0x11) + chr(chan) + chr(0x00) + chr(abs(val)))
+
     def Address( self, oldaddr, newaddr ):
         if type(oldaddr) != types.IntType or type(newaddr) != types.IntType:
             raise TypeError
@@ -101,29 +98,5 @@ def get_char_num(x):
     """
     return int((256+x)%256)
 
-
-# --------------------------------------------------------------------------------------
-if __name__=='__main__':
-    
-    import time
-
-    sleep_t = 15.0
-    com_port_num = 0
-    pattern_id = 2
-    gain_x, offset_x = -1, 1
-    gain_y, offset_y = 0, 0
-
-    print 'testing PanelCom'
-    ctlr = PanelCom(0)
-
-    ctlr.SetPatternID(pattern_id)
-    ctlr.SetGainOffset(gain_x, offset_x, gain_y, offset_y)
-
-    ctlr.Start()
-    time.sleep(sleep_t)
-    ctlr.Stop()
-    ctlr.AllOff()
-
-    print 'done'
 
     

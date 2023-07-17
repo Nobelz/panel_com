@@ -1,0 +1,2 @@
+pyserial
+win23all
