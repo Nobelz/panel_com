@@ -11,92 +11,132 @@ Revision History:
     2006?: Translated to Python by SAB
     4/8/2007: Made into a class by JAB
     2008?: Made into a stand alone python package by Will Dickson
-    v1.0 (7/17/2023): Revised and added additional functionality by Nobel Zhou (nxz157@case.edu)
+    v1.0 (7/17/2023): Revised by Nobel Zhou for Generation 2 displays (nxz157@case.edu)
 """
-
-# Constants
-GAIN_MAX = 10.0
-GAIN_MIN = -10.0
-OFFSET_MAX = 5.0
-OFFSET_MIN = -5.0
 
 import serial
 import types
+from typing import List
 
 class PanelCom:
-    def __init__(self, port, baudrate):
+    def __init__(self, port, baudrate=19200):
         self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=None)
-        
-    def SetPatternID(self, patternid):
-        if type(patternid) != types.IntType: raise TypeError
-        if patternid < 0: raise ValueError
-        self.send(chr(0x02) + chr(0x03) + chr(patternid))
-
-    def BlinkLED( self ): self.send(chr(0x01) + chr(0x50))
-
-    def AllOn( self ): self.send(chr(0x01) + chr(0xFF))
-
-    def AllOff( self ): self.send(chr(0x01) + chr(0x00))
-
-    def Greenscale( self, level ):
-        if type(level) != types.IntType: raise TypeError
-        if level < 0 or level > 7: raise ValueError
-        self.send(chr(0x01) + chr(0x40 + level))
-
-    def Start( self ): self.send(chr(0x01) + chr(0x20))
-
-    def Stop( self ): self.send(chr(0x01) + chr(0x30))
-
-    def Reset( self ): self.send(chr(0x02) + chr(0x01) + chr(0x00))
-
-    def SetMode( self, modex, modey ):
-        if type(modex) != types.IntType or type(modey) != types.IntType:
-            raise TypeError
-        if modex < 0 or modey < 0 or modex > 4 or modey > 4:
-            raise ValueError
-        self.send(chr(0x03) + chr(0x10) + chr(modex) + chr(modey))
-
-    def SetGainOffset(self,gainx,offsetx,gainy,offsety):
-        gainx_num = get_char_num(round(100.0*gainx/GAIN_MAX))
-        gainy_num = get_char_num(round(100.0*gainy/GAIN_MAX))
-        offsetx_num = get_char_num(round(100.0*offsetx/OFFSET_MAX))
-        offsety_num = get_char_num(round(100.0*offsety/OFFSET_MAX))
-        msg = chr(0x05) + chr(0x71) + chr(gainx_num) + chr(offsetx_num) + chr(gainy_num) + chr(offsety_num)
-        self.send(msg)
-
-    def SetPositions(self,xpos,ypos):
-        if type(xpos) != types.IntType or type(ypos) != types.IntType:
-            raise TypeError
-        if xpos < 0 or xpos > 255 or ypos < 0 or ypos > 255:
-            raise ValueError
-        self.send(chr(0x05) + chr(0x70) + chr(xpos) + chr(0x00) + chr(ypos) + chr(0x00))
-
-    def SetAO(self, chan, val):
-        if type(chan) != types.IntType or type(val) != types.IntType:
-            raise TypeError
-        if chan < 1 or chan > 4 or abs(val) > 255:
-            raise ValueError
-        if val > 0:
-            self.send(chr(0x04) + chr(0x10) + chr(chan) + chr(0x00) + chr(val))
-        else:
-            self.send(chr(0x04) + chr(0x11) + chr(chan) + chr(0x00) + chr(abs(val)))
-
-    def Address( self, oldaddr, newaddr ):
-        if type(oldaddr) != types.IntType or type(newaddr) != types.IntType:
-            raise TypeError
-        if oldaddr < 0 or newaddr < 0: raise ValueError
-        self.send(chr(0x03) + chr(0xFF) + chr(oldaddr) + chr(newaddr))
-
-    #################################################################################
-    def send(self,buf):
-        #print "sending:", repr(buf)
-        self.ser.write( buf )
-
-def get_char_num(x):
-    """
-    Convert signed integer to number in range 0 - 256
-    """
-    return int((256+x)%256)
-
-
     
+    def __del__(self):
+        self.ser.close()
+
+    # 1 byte commands
+    def start(self):
+        self._send_serial(chr(0x01) + chr(0x20))
+
+    def stop(self):
+        self._send_serial(chr(0x01) + chr(0x30))
+
+    def start_w_trig(self):
+        self._send_serial(chr(0x01) + chr(0x25))
+        
+    def stop_w_trig(self):
+        self._send_serial(chr(0x01) + chr(0x35))
+    
+    def clear(self):
+        self._send_serial(chr(0x01) + chr(0xF0))
+
+    def all_off(self):
+        self._send_serial(chr(0x01) + chr(0x00))
+        
+    def all_on(self):
+        self._send_serial(chr(0x01) + chr(0xFF))
+    
+    def g_level(self, level: int):
+        if level < 0 or level > 7:
+            raise ValueError('Level must be between 0 and 7')
+        self._send_serial(chr(0x01) + chr(0x40 + level))
+    
+    def led_toggle(self):
+        self._send_serial(chr(0x01) + chr(0x50))
+
+    def reset_controller(self):
+        self._send_serial(chr(0x01) + chr(0x60))
+
+    def bench_pattern(self):
+        self._send_serial(chr(0x01) + chr(0x70))
+
+    def laser_on(self):
+        self._send_serial(chr(0x01) + chr(0x10))
+
+    def laser_off(self):
+        self._send_serial(chr(0x01) + chr(0x11))
+
+    def ident_compression_on(self):
+        self._send_serial(chr(0x01) + chr(0x12))   
+
+    def ident_compression_on(self):
+        self._send_serial(chr(0x01) + chr(0x13))  
+
+    # 2 byte commands
+    def reset_panel(self, panel_addr: int):
+        if panel_addr < 0 or panel_addr > 127:
+            raise ValueError('Panel address must be between 1 and 127, or 0 for all panels')
+        self._send_serial(chr(0x02) + chr(0x01) + chr(panel_addr))
+    
+    def display_panel_addr(self, panel_addr: int):
+        if panel_addr < 0 or panel_addr > 127:
+            raise ValueError('Panel address must be between 1 and 127, or 0 for all panels')
+        self._send_serial(chr(0x02) + chr(0x02) + chr(panel_addr))
+    
+    def set_pattern_id(self, pattern_id: int):
+        if pattern_id < 1 or pattern_id > 99:
+            raise ValueError('Pattern ID must be between 1 and 99')
+        self._send_serial(chr(0x02) + chr(0x03) + chr(pattern_id))
+
+    def adc_test(self, channel: int):
+        if channel < 0 or channel > 7:
+            raise ValueError('ADC Channel must be between 0 and 7')
+        self._send_serial(chr(0x02) + chr(0x04) + chr(channel))
+
+    def dio_test(self, channel: int):
+        if channel < 0 or channel > 7:
+            raise ValueError('DIO Channel must be between 0 and 7')
+        self._send_serial(chr(0x02) + chr(0x05) + chr(channel))
+    
+    def set_trigger_rate(self, rate: int)
+        if rate < 0 or rate > 255:
+            raise ValueError('Trigger rate must be between 0 and 255')
+        self._send_serial(chr(0x02) + chr(0x06) + chr(rate))
+    
+    # 3 byte commands
+    def set_mode(self, x_mode: int, y_mode: int):
+        self._send_serial(chr(0x03) + chr(0x10) + chr(x_mode) + chr(y_mode))
+    
+    def change_address(self, old_addr: int, new_addr: int):
+        if old_addr < 0 or old_addr > 127 or new_addr < 0 or new_addr > 127:
+            raise ValueError('Panel address must be between 1 and 127, or 0 for all panels')
+        self._send_serial(chr(0x03) + chr(0xFF) + chr(old_addr) + chr(new_addr))
+    
+    # 5 byte commands
+    def set_position(self, x_pos: int, y_pos: int):
+        if x_pos < 0 or y_pos < 0:
+            raise ValueError('Position indices must be non-negative numbers')
+        self._send_serial(chr(0x05) + chr(0x10) + PanelCom._dec_to_char(x_pos, 2) + PanelCom._dec_to_char(y_pos, 2))
+    
+    def set_gain_bias(self, x_gain: int, x_bias: int, y_gain: int, y_bias: int):
+        self._send_serial(chr(0x05) + chr(0x71) + PanelCom._signed_bytes_to_chars([x_gain, x_bias, y_gain, y_bias]))
+
+    # private methods
+    def _send_serial(self, to_write):
+        self.ser.write(to_write)
+    
+    @staticmethod
+    def _dec_to_char(num: int, num_chars: int):
+        if num > 2 ^ (8 * num_chars):
+            raise ValueError('Number is too large to fit in specified number of chars')
+        elif num < 0:
+            raise ValueError('Number must be positive')
+        
+        chars = ''
+        for i in range(num_chars, 1, -1):
+            chars += chr(num >> (8 * (i - 1)))
+    
+    @staticmethod
+    def _signed_bytes_to_chars(bytes: List[int]) -> str:
+        return ''.join([chr((b % 256 + 256) % 256) for b in bytes])
