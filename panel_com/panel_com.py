@@ -99,7 +99,7 @@ class PanelCom:
             raise ValueError('DIO Channel must be between 0 and 7')
         self._send_serial(chr(0x02) + chr(0x05) + chr(channel))
     
-    def set_trigger_rate(self, rate: int)
+    def set_trigger_rate(self, rate: int):
         if rate < 0 or rate > 255:
             raise ValueError('Trigger rate must be between 0 and 255')
         self._send_serial(chr(0x02) + chr(0x06) + chr(rate))
@@ -117,25 +117,23 @@ class PanelCom:
     def set_position(self, x_pos: int, y_pos: int):
         if x_pos < 0 or y_pos < 0:
             raise ValueError('Position indices must be non-negative numbers')
-        self._send_serial(chr(0x05) + chr(0x10) + PanelCom._dec_to_char(x_pos, 2) + PanelCom._dec_to_char(y_pos, 2))
+        self._send_serial(chr(0x05) + chr(0x70) + PanelCom._dec_to_char(x_pos, 2) + PanelCom._dec_to_char(y_pos, 2))
     
     def set_gain_bias(self, x_gain: int, x_bias: int, y_gain: int, y_bias: int):
         self._send_serial(chr(0x05) + chr(0x71) + PanelCom._signed_bytes_to_chars([x_gain, x_bias, y_gain, y_bias]))
 
     # private methods
-    def _send_serial(self, to_write):
-        self.ser.write(to_write)
+    def _send_serial(self, to_write: str):
+        self.ser.write(list(map(ord, list(to_write))))
     
     @staticmethod
-    def _dec_to_char(num: int, num_chars: int):
-        if num > 2 ^ (8 * num_chars):
+    def _dec_to_char(num: int, num_chars: int) -> str:
+        if num > 2 ** (8 * num_chars):
             raise ValueError('Number is too large to fit in specified number of chars')
         elif num < 0:
             raise ValueError('Number must be positive')
         
-        chars = ''
-        for i in range(num_chars, 1, -1):
-            chars += chr(num >> (8 * (i - 1)))
+        return ''.join([chr(num >> (8 * i)) for i in range(0, num_chars, 1)])
     
     @staticmethod
     def _signed_bytes_to_chars(bytes: List[int]) -> str:
