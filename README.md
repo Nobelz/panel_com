@@ -1,5 +1,5 @@
-[![Downloads](https://pepy.tech/badge/panel_com)](https://pepy.tech/project/panel_com)
-[![Supported Versions](https://img.shields.io/pypi/pyversions/panel_com.svg)](https://pypi.org/project/panel_com)
+[![Downloads](https://pepy.tech/badge/panel_com_g2)](https://pepy.tech/project/panel_com_g2)
+[![Supported Versions](https://img.shields.io/pypi/pyversions/panel_com_g2.svg)](https://pypi.org/project/panel_com_g2)
 
 # panel_com_g2
 
