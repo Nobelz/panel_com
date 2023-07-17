@@ -1,24 +1,24 @@
-#!/usr/bin/env python
-#
 # Example using panel_com
+
 from panel_com import PanelCom
 import time
 
-sleep_t = 15.0
-com_port_num = 0
-pattern_id = 2
-gain_x, offset_x = -1, 1
-gain_y, offset_y = 0, 0
+# Create a PanelCom object
+controller = PanelCom('COM5')
+controller.set_pattern_id(1)
+controller.ident_compression_off()
+controller.set_mode(4, 4)
+controller.set_gain_bias(0, 0, 0, 0)
 
-print 'testing PanelCom'
-ctlr = PanelCom()
+# Make dummy sequence of 1 to 1000
+sequence = [i for i in range(1, 1001)]
 
-ctlr.SetPatternID(pattern_id)
-ctlr.SetGainOffset(gain_x, offset_x, gain_y, offset_y)
+# Send function of all ones
+for i in range(20):
+    j = 1 + i * 50;
+    k = j + 49;
 
-ctlr.Start()
-time.sleep(sleep_t)
-ctlr.Stop()
-ctlr.AllOff()
-
-print 'done'
+    controller.send_function(True, i, sequence[j : k])
+    controller.send_function(False, i, sequence[j : k])
+    
+    time.sleep(0.1)
