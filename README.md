@@ -8,7 +8,7 @@ panel_com provides a serial port interface to Michael Reiser's Panel Generation 
 ## Installation and Setup
 Install the package using the following command:
 ```
-python -m pip install panel_com 
+python -m pip install panel_com_g2
 ```
 
 To update the package, use the following command:
