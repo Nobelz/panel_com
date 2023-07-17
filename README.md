@@ -7,7 +7,7 @@ panel_com provides a serial port interface to Michael Reiser's Panel Generation 
 
 **WARNING:** this is in (and will likely remain in) the early development phase, so besides a couple of choice methods, most of the functionalities may not work as expected. If you see any problems, please make a pull request.
 
-**ANOTHER WARNING:** This package was largely based on [Will Dickson's panel_comm][https://github.com/iorodeo/panel_comm] but is by no means affiliated with the Reiser or Dickson lab, in any way, shape, or form.
+**ANOTHER WARNING:** This package was largely based on [Will Dickson's panel_comm](https://github.com/iorodeo/panel_comm) but is by no means affiliated with the Reiser or Dickson lab, in any way, shape, or form.
 
 ## Installation and Setup
 Install the package using the following command:
