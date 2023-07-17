@@ -1,1 +1,1 @@
-from panel_com import *
+from .panel import PanelCom

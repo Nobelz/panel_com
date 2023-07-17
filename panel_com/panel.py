@@ -1,5 +1,5 @@
 """
-panel_com.py
+panel.py
 
 Python class rewrite of the serial interface with Micahel Reiser's panel controller.
 
@@ -69,7 +69,7 @@ class PanelCom:
     def ident_compression_on(self):
         self._send_serial(chr(0x01) + chr(0x12))   
 
-    def ident_compression_on(self):
+    def ident_compression_off(self):
         self._send_serial(chr(0x01) + chr(0x13))  
 
     # 2 byte commands
@@ -142,4 +142,3 @@ class PanelCom:
     @staticmethod
     def _signed_bytes_to_chars(bytes: List[int]) -> str:
         return ''.join([chr((b % 256 + 256) % 256) for b in bytes])
-    
