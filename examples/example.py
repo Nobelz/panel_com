@@ -1,5 +1,5 @@
 import time
-import panel_com
+from panel_com_g2 import PanelCom
 
 # Create a PanelCom object
 controller = PanelCom('COM5')

@@ -4,14 +4,14 @@ panel.py
 Python class rewrite of the serial interface with Micahel Reiser's panel controller.
 
 Author: Various authors (see below)
-Version: 1.0
+Version: 0.2
 
 Revision History:
     2004?: Original Matlab code by Michael Reiser
     2006?: Translated to Python by SAB
     4/8/2007: Made into a class by JAB
     2008?: Made into a stand alone python package by Will Dickson
-    v1.0 (7/17/2023): Revised by Nobel Zhou for Generation 2 displays (nxz157@case.edu)
+    v0.2 (7/17/2023): Revised by Nobel Zhou for Generation 2 displays (nxz157@case.edu)
 """
 
 import serial
